@@ -1,0 +1,146 @@
+<!-- <div class="chat-container">
+
+  <div class="sidebar">
+    <button class="new-chat-btn" (click)="createNewChat()">+ New Chat</button>
+
+    <div class="chat-list">
+      <div 
+        class="chat-item" 
+        *ngFor="let chat of chats"
+        (click)="loadChat(chat.id)"
+      >
+        {{ chat.title }}
+      </div>
+    </div>
+
+    <button class="logout-btn">Logout</button>
+  </div>
+
+
+  <div class="main">
+
+    <app-header></app-header>
+
+   
+    <div class="chat-box">
+
+      <div 
+        *ngFor="let msg of messages"
+        [ngClass]="msg.role === 'user' ? 'message user' : 'message bot'"
+      >
+        {{ msg.content }}
+      </div>
+
+   
+      <div *ngIf="loading" class="message bot">
+        Typing...
+      </div>
+
+    </div>
+
+  
+    <div class="input-box">
+      <input 
+        [(ngModel)]="message"
+        (keyup.enter)="sendMessage()"
+        placeholder="Ask something..."
+      />
+
+      <button (click)="fileInput.click()">📎</button>
+      <input 
+        type="file" 
+        #fileInput 
+        hidden 
+        (change)="onFileSelected($event)" 
+      />
+      <button>📷</button>
+      <button (click)="summarizeChat()">🧠</button>
+      <button (click)="sendMessage()">➤</button>
+    </div>
+
+  </div>
+
+</div> -->
+
+
+
+
+
+<div class="chat-container">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <button class="new-chat-btn" (click)="createNewChat()">
+      + New Chat
+    </button>
+
+    <div class="chat-list">
+      <div 
+        class="chat-item"
+        *ngFor="let chat of chats"
+        [class.active]="chat.id === sessionId"
+        (click)="loadChat(chat.id)"
+      >
+        {{ chat.title }}
+      </div>
+    </div>
+
+    <button class="logout-btn">Logout</button>
+
+  </div>
+
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <app-header></app-header>
+
+    <!-- CHAT AREA -->
+    <div class="chat-box">
+
+      <div 
+        *ngFor="let msg of messages"
+        [ngClass]="msg.role === 'user' ? 'message user' : 'message bot'"
+      >
+        {{ msg.content }}
+      </div>
+
+      <!-- Typing -->
+      <div *ngIf="loading" class="message bot">
+        Typing...
+      </div>
+
+    </div>
+
+
+    <!-- INPUT -->
+    <div class="input-box">
+
+      <input 
+        [(ngModel)]="message"
+        (keyup.enter)="sendMessage()"
+        placeholder="Ask something..."
+      />
+
+      <!-- FILE -->
+      <button (click)="fileInput.click()">📎</button>
+      <input 
+        type="file"
+        #fileInput
+        hidden
+        (change)="onFileSelected($event)"
+      />
+
+      <!-- IMAGE (next step) -->
+      <button>📷</button>
+
+
+      <!-- SEND -->
+      <button (click)="sendMessage()">➤</button>
+
+    </div>
+
+  </div>
+
+</div>
