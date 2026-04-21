@@ -1,14 +1,12 @@
 <div class="auth-container">
   <div class="card">
     <h2>{{ isLogin ? 'Login' : 'Register' }}</h2>
-
     <input type="text" placeholder="Username" [(ngModel)]="username">
     <input type="password" placeholder="Password" [(ngModel)]="password">
-
-    <button (click)="submit()">
-      {{ isLogin ? 'Login' : 'Register' }}
+    <p class="message" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <button (click)="submit()" [disabled]="loading">
+      {{ loading ? 'Please wait...' : (isLogin ? 'Login' : 'Register') }}
     </button>
-
     <p (click)="toggleMode()">
       {{ isLogin ? 'Create account' : 'Already have account?' }}
     </p>

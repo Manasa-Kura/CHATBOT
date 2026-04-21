@@ -1,146 +1,178 @@
-<!-- <div class="chat-container">
-
-  <div class="sidebar">
-    <button class="new-chat-btn" (click)="createNewChat()">+ New Chat</button>
-
-    <div class="chat-list">
-      <div 
-        class="chat-item" 
-        *ngFor="let chat of chats"
-        (click)="loadChat(chat.id)"
-      >
-        {{ chat.title }}
-      </div>
+<div class="chat-shell" [class.right-dark]="rightPanelDark">
+  <aside class="sidebar">
+    <div class="sidebar-top">
+      <button class="new-chat-btn" type="button" (click)="createNewChat()" [disabled]="loadingHistory">
+        + New Chat
+      </button>
     </div>
-
-    <button class="logout-btn">Logout</button>
-  </div>
-
-
-  <div class="main">
-
-    <app-header></app-header>
-
-   
-    <div class="chat-box">
-
-      <div 
-        *ngFor="let msg of messages"
-        [ngClass]="msg.role === 'user' ? 'message user' : 'message bot'"
-      >
-        {{ msg.content }}
-      </div>
-
-   
-      <div *ngIf="loading" class="message bot">
-        Typing...
-      </div>
-
-    </div>
-
-  
-    <div class="input-box">
-      <input 
-        [(ngModel)]="message"
-        (keyup.enter)="sendMessage()"
-        placeholder="Ask something..."
-      />
-
-      <button (click)="fileInput.click()">📎</button>
-      <input 
-        type="file" 
-        #fileInput 
-        hidden 
-        (change)="onFileSelected($event)" 
-      />
-      <button>📷</button>
-      <button (click)="summarizeChat()">🧠</button>
-      <button (click)="sendMessage()">➤</button>
-    </div>
-
-  </div>
-
-</div> -->
-
-
-
-
-
-<div class="chat-container">
-
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-
-    <button class="new-chat-btn" (click)="createNewChat()">
-      + New Chat
-    </button>
-
-    <div class="chat-list">
-      <div 
+    <div class="chat-list" aria-label="Chat sessions">
+      <button
         class="chat-item"
-        *ngFor="let chat of chats"
+        type="button"
+        *ngFor="let chat of chats; trackBy: trackChat"
         [class.active]="chat.id === sessionId"
-        (click)="loadChat(chat.id)"
-      >
-        {{ chat.title }}
+        (click)="loadChat(chat.id)">
+        <ng-container *ngIf="!chat.renaming; else renameInput">
+          <span class="chat-title">{{ chat.title }}</span>
+          <span class="chat-actions">
+            <button class="icon-btn" type="button" title="Rename" (click)="startRename(chat, $event)">
+              Edit
+            </button>
+            <button class="icon-btn danger" type="button" title="Delete" (click)="deleteChat(chat, $event)">
+              Del
+            </button>
+          </span>
+        </ng-container>
+        <ng-template #renameInput>
+          <input
+            class="rename-input"
+            [(ngModel)]="chat.draftTitle"
+            (click)="$event.stopPropagation()"
+            (keyup.enter)="saveRename(chat, $event)"
+            (blur)="saveRename(chat, $event)"
+            autofocus
+          />
+        </ng-template>
+      </button>
+      <div class="empty-sidebar" *ngIf="chats.length === 0">
+        No chats yet
       </div>
     </div>
-
-    <button class="logout-btn">Logout</button>
-
-  </div>
-
-
-  <!-- MAIN -->
-  <div class="main">
-
-    <app-header></app-header>
-
-    <!-- CHAT AREA -->
-    <div class="chat-box">
-
-      <div 
-        *ngFor="let msg of messages"
-        [ngClass]="msg.role === 'user' ? 'message user' : 'message bot'"
-      >
-        {{ msg.content }}
+    <div class="profile-area">
+      <button class="profile-trigger" type="button" (click)="toggleProfileMenu()">
+        <span class="profile-avatar">{{ userProfile?.username?.charAt(0) || 'U' }}</span>
+        <span class="profile-name">{{ userProfile?.username || 'User account' }}</span>
+        <span class="profile-chevron">›</span>
+      </button>
+      <div class="profile-menu" *ngIf="profileMenuOpen">
+        <button type="button" (click)="openProfile()">Profile</button>
+        <button type="button" (click)="openSettings()">Settings</button>
+        <button type="button" class="logout-menu-item" (click)="requestLogout()">Logout</button>
       </div>
-
-      <!-- Typing -->
-      <div *ngIf="loading" class="message bot">
-        Typing...
-      </div>
-
     </div>
-
-
-    <!-- INPUT -->
-    <div class="input-box">
-
-      <input 
-        [(ngModel)]="message"
-        (keyup.enter)="sendMessage()"
-        placeholder="Ask something..."
-      />
-
-      <!-- FILE -->
-      <button (click)="fileInput.click()">📎</button>
-      <input 
+  </aside>
+  <main class="chat-main">
+    <header class="chat-header">
+      <div>
+        <h1>Chatbot</h1>
+        <p *ngIf="sessionId">Session {{ sessionId }}</p>
+      </div>
+      <div class="status-pill" *ngIf="loading || uploadingDoc || uploadingImage">
+        Working
+      </div>
+    </header>
+    <section class="messages-panel" #chatBox>
+      <div class="notice error" *ngIf="errorMessage">{{ errorMessage }}</div>
+      <div class="notice" *ngIf="loadingHistory">Loading chat...</div>
+      <div class="welcome" *ngIf="!loadingHistory && messages.length === 0">
+        <h2>Start a conversation</h2>
+        <p>Ask a question, upload a document, or attach an image to continue this session.</p>
+      </div>
+      <div
+        class="message-row"
+        *ngFor="let msg of messages; trackBy: trackMessage"
+        [class.user-row]="msg.role === 'user'"
+        [class.bot-row]="msg.role === 'bot'"
+        [class.system-row]="msg.role === 'system'">
+        <article class="message-bubble" [class.error-bubble]="msg.type === 'error'">
+          <img class="message-image" *ngIf="msg.type === 'image' && msg.previewUrl" [src]="msg.previewUrl" [alt]="msg.fileName || 'Uploaded image'" />
+          <div class="file-chip" *ngIf="msg.type === 'file'">
+            <span class="file-icon">FILE</span>
+            <span>{{ msg.fileName }}</span>
+          </div>
+          <p>{{ msg.content }}</p>
+          <small *ngIf="msg.type === 'image' || msg.type === 'file'">{{ msg.fileName }}</small>
+        </article>
+      </div>
+      <div class="message-row bot-row" *ngIf="loading">
+        <article class="message-bubble typing">
+          <span></span>
+          <span></span>
+          <span></span>
+        </article>
+      </div>
+    </section>
+    <section
+      class="upload-strip"
+      [class.drag-over]="dragOver"
+      (drop)="onDocDrop($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()">
+      <span>Drop PDF, TXT, or DOCX here</span>
+      <button type="button" (click)="docInput.click()" [disabled]="!sessionId || uploadingDoc">
+        Document
+      </button>
+      <button type="button" (click)="imageInput.click()" [disabled]="!sessionId || uploadingImage">
+        Image
+      </button>
+      <input
+        #docInput
         type="file"
-        #fileInput
         hidden
-        (change)="onFileSelected($event)"
+        accept=".pdf,.txt,.docx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        (change)="onDocSelected($event)"
       />
-
-      <!-- IMAGE (next step) -->
-      <button>📷</button>
-
-
-      <!-- SEND -->
-      <button (click)="sendMessage()">➤</button>
-
+      <input
+        #imageInput
+        type="file"
+        hidden
+        accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+        (change)="onImageSelected($event)"
+      />
+    </section>
+    <form class="composer" (ngSubmit)="sendMessage()">
+      <input
+        name="message"
+        [(ngModel)]="message"
+        placeholder="Ask something..."
+        autocomplete="off"
+        [disabled]="!sessionId || loading || loadingHistory"
+      />
+      <button type="submit" [disabled]="!message.trim() || !sessionId || loading || loadingHistory">
+        Send
+      </button>
+    </form>
+  </main>
+  <div class="modal-backdrop" *ngIf="activePanel || showLogoutConfirm" (click)="closePanel(); cancelLogout()"></div>
+  <section class="side-popover" *ngIf="activePanel === 'profile'">
+    <header>
+      <h2>Profile</h2>
+      <button type="button" (click)="closePanel()">×</button>
+    </header>
+    <div class="profile-details" *ngIf="profileLoading">Loading profile...</div>
+    <div class="profile-details error-text" *ngIf="profileError">{{ profileError }}</div>
+    <div class="profile-details" *ngIf="!profileLoading && !profileError">
+      <div>
+        <span>Username</span>
+        <strong>{{ userProfile?.username || '-' }}</strong>
+      </div>
+      <div>
+        <span>User ID</span>
+        <strong>{{ userProfile?.id || '-' }}</strong>
+      </div>
     </div>
-
-  </div>
-
+  </section>
+  <section class="side-popover" *ngIf="activePanel === 'settings'">
+    <header>
+      <h2>Settings</h2>
+      <button type="button" (click)="closePanel()">×</button>
+    </header>
+    <div class="setting-row">
+      <div>
+        <strong>Right panel mood</strong>
+        <span>{{ rightPanelDark ? 'Dark mode on' : 'Light mode on' }}</span>
+      </div>
+      <button class="toggle-switch" type="button" [class.on]="rightPanelDark" (click)="toggleRightPanelMode()">
+        <span></span>
+      </button>
+    </div>
+  </section>
+  <section class="logout-dialog" *ngIf="showLogoutConfirm">
+    <h2>Logout?</h2>
+    <p>Are you sure you want to logout from this account?</p>
+    <div class="dialog-actions">
+      <button type="button" class="cancel-btn" (click)="cancelLogout()">Cancel</button>
+      <button type="button" class="confirm-btn" (click)="confirmLogout()">Logout</button>
+    </div>
+  </section>
 </div>

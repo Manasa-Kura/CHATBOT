@@ -1,32 +1,91 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #0f172a;
+}
+
 .auth-container {
-  height: 100vh;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: #121212;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  background:
+    linear-gradient(145deg, rgba(45, 212, 191, 0.12), transparent 36%),
+    #0f172a;
 }
 
 .card {
-  background: #5b5a5a;
-  padding: 30px;
-  border-radius: 10px;
-  width: 300px;
+  width: min(390px, 100%);
+  padding: 34px;
+  border: 1px solid #243244;
+  border-radius: 14px;
+  background: #111827;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
   text-align: center;
+}
+
+h2 {
+  margin: 0 0 26px;
+  color: #f9fafb;
+  font-size: 28px;
+  font-weight: 800;
 }
 
 input {
   width: 100%;
-  margin: 10px 0;
-  padding: 10px;
-  background: #2c2c2c;
-  border: none;
-  color: white;
+  margin: 0 0 14px;
+  padding: 13px 14px;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 15px;
+  outline: none;
+}
+
+input:focus {
+  border-color: #2dd4bf;
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.16);
+}
+
+input::placeholder {
+  color: #94a3b8;
+}
+
+.message {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #cbd5e1;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 button {
   width: 100%;
-  padding: 10px;
-  background: #4caf50;
-  border: none;
-  color: white;
+  padding: 13px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #2dd4bf;
+  color: #062925;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+p:last-child {
+  margin: 18px 0 0;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+
+p:last-child:hover {
+  color: #2dd4bf;
 }
