@@ -1,10 +1,11 @@
-<div class="chat-shell" [class.right-dark]="rightPanelDark">
+﻿<div class="chat-shell" [class.right-dark]="rightPanelDark">
   <aside class="sidebar">
     <div class="sidebar-top">
       <button class="new-chat-btn" type="button" (click)="createNewChat()" [disabled]="loadingHistory">
-        + New Chat
+        Start new chat
       </button>
     </div>
+
     <div class="chat-list" aria-label="Chat sessions">
       <button
         class="chat-item"
@@ -15,14 +16,15 @@
         <ng-container *ngIf="!chat.renaming; else renameInput">
           <span class="chat-title">{{ chat.title }}</span>
           <span class="chat-actions">
-            <button class="icon-btn" type="button" title="Rename" (click)="startRename(chat, $event)">
-              Edit
+            <button class="icon-btn" type="button" title="Rename chat" (click)="startRename(chat, $event)">
+              Rename
             </button>
-            <button class="icon-btn danger" type="button" title="Delete" (click)="deleteChat(chat, $event)">
-              Del
+            <button class="icon-btn danger" type="button" title="Delete chat" (click)="deleteChat(chat, $event)">
+              Remove
             </button>
           </span>
-        </ng-container>
+        </ng-container> 
+
         <ng-template #renameInput>
           <input
             class="rename-input"
@@ -34,16 +36,19 @@
           />
         </ng-template>
       </button>
+
       <div class="empty-sidebar" *ngIf="chats.length === 0">
         No chats yet
       </div>
     </div>
+
     <div class="profile-area">
       <button class="profile-trigger" type="button" (click)="toggleProfileMenu()">
         <span class="profile-avatar">{{ userProfile?.username?.charAt(0) || 'U' }}</span>
         <span class="profile-name">{{ userProfile?.username || 'User account' }}</span>
-        <span class="profile-chevron">›</span>
+        <span class="profile-chevron">Menu</span>
       </button>
+
       <div class="profile-menu" *ngIf="profileMenuOpen">
         <button type="button" (click)="openProfile()">Profile</button>
         <button type="button" (click)="openSettings()">Settings</button>
@@ -51,23 +56,27 @@
       </div>
     </div>
   </aside>
+
   <main class="chat-main">
     <header class="chat-header">
       <div>
-        <h1>Chatbot</h1>
-        <p *ngIf="sessionId">Session {{ sessionId }}</p>
+        <h1>Assistant workspace</h1>
+        <p *ngIf="sessionId">Live thread {{ sessionId }}</p>
       </div>
       <div class="status-pill" *ngIf="loading || uploadingDoc || uploadingImage">
-        Working
+        Syncing
       </div>
     </header>
+
     <section class="messages-panel" #chatBox>
       <div class="notice error" *ngIf="errorMessage">{{ errorMessage }}</div>
-      <div class="notice" *ngIf="loadingHistory">Loading chat...</div>
+      <div class="notice" *ngIf="loadingHistory">Loading conversation...</div>
+
       <div class="welcome" *ngIf="!loadingHistory && messages.length === 0">
-        <h2>Start a conversation</h2>
-        <p>Ask a question, upload a document, or attach an image to continue this session.</p>
+        <h2>Ready when you are</h2>
+        <p>Ask anything, drop in a document, or send an image to build context for this thread.</p>
       </div>
+
       <div
         class="message-row"
         *ngFor="let msg of messages; trackBy: trackMessage"
@@ -84,6 +93,7 @@
           <small *ngIf="msg.type === 'image' || msg.type === 'file'">{{ msg.fileName }}</small>
         </article>
       </div>
+
       <div class="message-row bot-row" *ngIf="loading">
         <article class="message-bubble typing">
           <span></span>
@@ -92,24 +102,26 @@
         </article>
       </div>
     </section>
+
     <section
       class="upload-strip"
       [class.drag-over]="dragOver"
       (drop)="onDocDrop($event)"
       (dragover)="onDragOver($event)"
       (dragleave)="onDragLeave()">
-      <span>Drop PDF, TXT, or DOCX here</span>
+      <span>Drop a PDF, TXT, or DOCX file here to enrich the conversation</span>
       <button type="button" (click)="docInput.click()" [disabled]="!sessionId || uploadingDoc">
-        Document
+        Add document
       </button>
       <button type="button" (click)="imageInput.click()" [disabled]="!sessionId || uploadingImage">
-        Image
+        Add image
       </button>
       <input
         #docInput
         type="file"
         hidden
-        accept=".pdf,.txt,.docx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        accept=".pdf,.txt,.docx,.ppt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-powerpoint,
+        application/vnd.openxmlformats-officedocument.presentationml.presentation"
         (change)="onDocSelected($event)"
       />
       <input
@@ -120,24 +132,27 @@
         (change)="onImageSelected($event)"
       />
     </section>
+
     <form class="composer" (ngSubmit)="sendMessage()">
       <input
         name="message"
         [(ngModel)]="message"
-        placeholder="Ask something..."
+        placeholder="Message the assistant..."
         autocomplete="off"
         [disabled]="!sessionId || loading || loadingHistory"
       />
       <button type="submit" [disabled]="!message.trim() || !sessionId || loading || loadingHistory">
-        Send
+        Send now
       </button>
     </form>
   </main>
+
   <div class="modal-backdrop" *ngIf="activePanel || showLogoutConfirm" (click)="closePanel(); cancelLogout()"></div>
+
   <section class="side-popover" *ngIf="activePanel === 'profile'">
     <header>
       <h2>Profile</h2>
-      <button type="button" (click)="closePanel()">×</button>
+      <button type="button" (click)="closePanel()">X</button>
     </header>
     <div class="profile-details" *ngIf="profileLoading">Loading profile...</div>
     <div class="profile-details error-text" *ngIf="profileError">{{ profileError }}</div>
@@ -152,27 +167,29 @@
       </div>
     </div>
   </section>
+
   <section class="side-popover" *ngIf="activePanel === 'settings'">
     <header>
       <h2>Settings</h2>
-      <button type="button" (click)="closePanel()">×</button>
+      <button type="button" (click)="closePanel()">X</button>
     </header>
     <div class="setting-row">
       <div>
-        <strong>Right panel mood</strong>
-        <span>{{ rightPanelDark ? 'Dark mode on' : 'Light mode on' }}</span>
+        <strong>Ambient contrast</strong>
+        <span>{{ rightPanelDark ? 'Deep mode enabled' : 'Soft mode enabled' }}</span>
       </div>
       <button class="toggle-switch" type="button" [class.on]="rightPanelDark" (click)="toggleRightPanelMode()">
         <span></span>
       </button>
     </div>
   </section>
+
   <section class="logout-dialog" *ngIf="showLogoutConfirm">
-    <h2>Logout?</h2>
-    <p>Are you sure you want to logout from this account?</p>
+    <h2>Sign out?</h2>
+    <p>This will close the current session on this device.</p>
     <div class="dialog-actions">
-      <button type="button" class="cancel-btn" (click)="cancelLogout()">Cancel</button>
-      <button type="button" class="confirm-btn" (click)="confirmLogout()">Logout</button>
+      <button type="button" class="cancel-btn" (click)="cancelLogout()">Stay here</button>
+      <button type="button" class="confirm-btn" (click)="confirmLogout()">Sign out</button>
     </div>
   </section>
 </div>
